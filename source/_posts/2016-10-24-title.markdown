@@ -1,7 +1,241 @@
 ---
 layout: post
-title: "title"
+title: "Octopress + Github Pages 搭建博客的过程"
 date: 2016-10-24 02:09:17 -0700
 comments: true
 categories: 
 ---
+
+##前言
+
+一直以来都想找个地方把工作中遇到的问题，学习总结记录下来，但在以前的公司因为商业涉密
+的原因，很多博客网站都被屏蔽，也就把这事搁置了。这段时间正好有空，网上了解了下有什么
+比较适合程序员写技术博客的地方，看了别人推荐的Octopress + Github Pages来写博客
+的方法，有种相见恨晚的感觉，就像一位博主说的那样，像写代码一样写博客，所有的东西都是
+代码化的，一切尽在掌握中。本文参考网上的文章，记录下自己搭建的过程。
+
+这里先简单介绍下标题中的两个东西。Github想必大家都很熟悉了，它提供一个可以托管我们
+的项目和代码的一个仓储。而Github Pages呢，它是Github提供的用于介绍我们的项目或者
+个人的主页，一个Github账号可以有多个项目主页，但是只能有一个个人主页，我们可以在个
+人主页中存放技术文档，相当于一个技术博客（插点题外话，一开始关于Github Pages用作 个人博客这种行为是否正当网上有过争论，后来看到有了官方的介绍中是允许把Github Pages 作为博客，现在好像大家都接受了，我个人觉得用来写技术文章应该是符合Github Pages
+的本意的，技术无关的东西还是放在其他的博客平台比较好）。Octopress是一个Jekyll的博
+客框架，对Jekyll做了封装，使用更加方便，我们可以用它来很方便的写和上传博文。简单的
+说，Github Pages提供了一个个人主页可以被用作我们的博客，而Octopress则是我们编写
+和上传博文的工具。
+
+##准备工作
+
+* 安装git
+* 安装ruby （1.9.3以上版本）
+* Markdown编辑器，支持中文
+* 注册一个Github账号，创建博客的代码仓储
+
+###安装git
+我的系统是ubuntu 14.04，64位系统，直接 apt-get install git 安装。
+
+###安装ruby
+这里只介绍下ubuntu下的安装。如果直接用 apt-get install 的方式安装，会发现安装的
+ruby版本并不是最新的版本。我们需要1.9.3以上的ruby版本，因此先要安装一个ruby的版本
+管理工具，常用的两个工具是rbenv和RVM，我用的是rbenv。
+
+安装版本管理工具rbenv及build插件:
+
+    cd ~
+    git clone git://github.com/sstephenson/rbenv.git .rbenv
+    echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
+    echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
+    git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build
+    source ~/.bash_profile
+
+接下来安装新版本的ruby，我安装的是2.3.1版本，安装完后需要把本地的ruby版本切换到新版本
+
+    rbenv install 2.3.1
+    rbenv local 2.3.1
+    rbenv rehash
+
+###Markdown编辑器
+Octopress博文采用Markdown语法来书写，因此我们需要一款好用的Markdown编辑器，我用
+的是Sublime Text 3，安装过程很简单，这里就不再赘述。因为我们书写博客需要用中文，还
+需要安装一个中文输入法，比如搜狗输入法linux版本。另外再安装Sublime的Markdown插件，
+[Markdown Editing][]。
+
+###注册一个Github账号，创建博客的代码仓储
+注册的过程就不用多介绍了。注册好之后，我们还需要创建一个仓储(repo)用来存放博文。比如
+如果你的账号是username，那么你需要创建一个名为username.github.io的repo。注意在
+创建repo的时候，不要为repo创建README文档，让repo保持为空，否则在后面发布博文的时候
+会出现错误。
+
+##搭建过程
+
+* 安装Octopress及依赖
+* 关联Octopress到Github Pages
+* 基本配置
+* 开始写博客
+* 高级配置
+
+###安装Octopress及依赖
+克隆Octopress
+
+    git clone git://github.com/imathis/octopress.git octopress
+
+安装依赖
+
+    cd octopress
+    gem install bundler
+    rbenv rehash
+    bundle install
+
+安装默认主题
+
+    rake install
+
+到此，Octopress就安装好了。
+
+###关联Octopress到Github Pages
+前面说到，Octopress是编写和上传博文的工具，Github Pages提供了存储博文的仓储。这
+一步就是把这两者联系起来，也就是当我们用Octopress发布博文的时候，Octopress就知道
+把博文上传到我们指定的仓储。
+
+    rake setup_github_pages
+
+运行命令后，会要求输入Github Pages的repo地址，把下面的username替换成你的账户名
+
+    git@github.com:username/username.github.io.git
+
+[参考文档](#ref)2中解释了这个命令的处理过程，这里简单说明一下。我们从Github上clone了
+Octopress的代码，在没有执行这个命令之前，octopress目录下的分支对应的远端仓库（远端仓
+库名一般默认是origin）就是octopress这个项目的repo。当我们做了修改，再提交，那么我们
+就是提交到octopress这个项目的repo中。而我们的目的是想用ocotpress来写博文，并把我们
+的博文提交到前面我们创建的博客的repo（名为username.github.io的repo）。因此我们需要
+把octopress关联到我们自己的repo。在执行这个命令后，默认的远端仓库origin被指向了我们
+创建的博客repo，同时创建了一个新的名为octopress的远端仓库用来指向octopress项目的
+repo。
+
+在octopress目录下运行命令
+
+    git remote -v
+
+你将会看到两个远端仓库。
+
+###基本配置
+现在可以对Octopress作一下简单的配置，主要是对_config.yml文件进行修改。
+
+    title: 毛盾的博客
+    subtitle: step by step.
+    author: 毛盾
+
+
+###开始写博客
+主要是下面的几个命令
+
+    rake new_post["title"]  //在/source/_posts目录下生成博文框架，为markdown格式
+    rake generate           //把markdown文件转换成静态页面，在public目录下
+    rake preview            //在http://localhost:4000/ 预览博文
+
+如果一切顺利，你就会看到你的博客了，此时博客里只有一篇刚刚创建的博文，内容为空。此时你
+就可以用Markdown编辑器打开/source/_posts目录下的markdown文档，往里面填充内容了。
+关于Markdown语法，可以参考[这里][Markdown]。当你写完一篇博文，想要上传到Github Pages你的个人主页，就用下面的命令来发布。
+
+    rake deploy             //把public目录下的内容拷贝到_deploy目录下，上传到博客repo
+
+此外，我们还需要提交博客的源文件
+
+    git add .
+    git commit -m 'comment'
+    git push origin source
+
+以上就是写博客的基本流程。[参考文档](#ref)2中介绍了Octopress的工作原理，这里作下
+简单说明。Octopress建立了两个分支，一个分支是master分支，对应_deploy目录，也就
+是我们最终发布的静态页面。另一个分支是source分支，包括博文的markdown文件，以及生
+成博文的插件，主题和脚本等。执行rake deploy命令，会将master分支进行提交。如果我
+们要提交源文件，则需要使用git命令手动提交source分支。
+
+###高级配置
+
+####社交分享
+有很多第三方库提供社交分享的功能，我用的是jiathis。
+
+1. 在_config.yml中，增加
+
+        social_share: true
+
+2. 修改source/_includes/post/sharing.html，增加下面的内容，记得把所有的
+   \去掉
+
+          \{\% if site.social_share \%\}
+              \{\% include post/social_media.html \%\}
+          \{\% endif \%\}
+
+3. 新建文件source/_includes/post/social_media.html，访问[jiathis][]，
+   获取分享的代码，放入新建的文件中。最好先注册一个jiathis账号后再获取代码，这
+   样获取的代码会带有你的uid。
+
+####添加文章评论
+有很多第三方的评论平台，这里使用多说。
+
+1. 打开[多说主页][duoshuo]，在主页上点击“我要安装”，之后选择一个社交工具的账号
+   来登录，然后开始创建站点，站点地址就填写你的博客地址username.github.io，
+   然后填写你的多说域名（你填写的部分就是你的多说short_name，后面会用到）。
+
+2. 在_config.yml中，增加
+
+        duoshuo_comments: true
+        duoshuo_short_name: yourname    //你的多说short_name
+
+3. 在source/_layouts/post.html中，_增加
+
+        ｛% if site.duoshuo_short_name and site.duoshuo_comments == true and page.comments == true %｝
+         <section>
+          <h1>Comments</h1>
+          <div id="comments" aria-live="polite">｛% include post/duoshuo.html %｝</div>
+         </section>
+        ｛% endif %｝
+
+4. 新建文件source/_includes/post/duoshuo.html，将下面的代码模板复制到新建的
+   文件中，记得把yourname替换成你自己的多说short_name。
+
+        <!-- Duoshuo COMMENT BEGIN -->
+        <div class="ds-thread"></div>
+        <script type="text/javascript">
+            var duoshuoQuery = {short_name: "yourname"};
+            (function() {
+                var ds = document.createElement('script');
+                ds.type = 'text/javascript';
+                ds.async = true;
+                ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+                ds.charset = 'utf-8';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ds);
+            })();
+        </script>
+        <!-- Duoshuo COMMENT END -->
+
+####其他高级配置
+比如配置独立域名，添加about页等，参考文档里面讲的比较详细，这里就不多介绍了。
+
+##遇到的问题
+
+1. 执行命令rake preview，提示Could not find a JavaScript runtime.可能是你
+   没有安装js运行环境，如果是ubuntu系统，直接apt-get install nodejs。
+
+2. 如果你在为博客创建repo的时候，repo不为空，比如添加了一个README文档，那么在执行
+   rake deploy时可能会报错，解决方法参考[这里][rake deploy err]。
+
+3. 如果你修改了博文，rake generate，然后rake preview预览，发现博文没有更新，把
+   浏览器的缓存清理一下，再试试。
+
+<h2 id="ref">参考文档</h2>
+
+[1]http://toughcoder.net/blog/2014/10/16/blogging-like-a-hacker-with-github-pages/
+[2]http://blog.leichunfeng.com/blog/2014/11/11/use-octopress-plus-github-pages-to-setup-a-personal-blog/<br/>
+[3]http://blog.devtang.com/2012/02/10/setup-blog-based-on-github/
+[4]http://www.jianshu.com/p/1a117ef0e534
+
+
+[Markdown Editing]: https://github.com/SublimeText-Markdown/MarkdownEditing
+[Markdown]: http://daringfireball.net/projects/markdown/
+[jiathis]: http://www.jiathis.com/
+[duoshuo]: http://duoshuo.com/
+[rake deploy err]: http://www.cnblogs.com/xiongqiangcs/p/4234789.html
+
+
+

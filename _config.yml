@@ -3,9 +3,9 @@
 # ----------------------- #
 
 url: http://anyegongjue282.github.io
-title: My Octopress Blog
-subtitle: A blogging framework for hackers.
-author: anyegongjue
+title: 毛盾的博客
+subtitle: step by step.
+author: 毛盾
 simple_search: https://www.google.com/search
 description:
 
@@ -101,4 +101,4 @@ google_analytics_tracking_id:
 facebook_like: false
 social_share: true
 duoshuo_comments: true
-duoshuo_short_name: LvYeXianWeng
+duoshuo_short_name: anyegongjue282
