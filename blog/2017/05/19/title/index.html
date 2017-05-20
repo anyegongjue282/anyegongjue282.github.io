@@ -1,24 +1,92 @@
-<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[毛盾的博客]]></title>
-  <link href="http://anyegongjue282.github.io/atom.xml" rel="self"/>
-  <link href="http://anyegongjue282.github.io/"/>
-  <updated>2017-05-20T18:05:00+08:00</updated>
-  <id>http://anyegongjue282.github.io/</id>
-  <author>
-    <name><![CDATA[毛盾]]></name>
-    
-  </author>
-  <generator uri="http://octopress.org/">Octopress</generator>
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Ubuntu搭建pxe实现网络安装操作系统 - 毛盾的博客</title>
+  <meta name="author" content="毛盾">
 
   
-  <entry>
-    <title type="html"><![CDATA[Ubuntu搭建pxe实现网络安装操作系统]]></title>
-    <link href="http://anyegongjue282.github.io/blog/2017/05/19/title/"/>
-    <updated>2017-05-19T09:19:23+08:00</updated>
-    <id>http://anyegongjue282.github.io/blog/2017/05/19/title</id>
-    <content type="html"><![CDATA[<h2>前言</h2>
+  <meta name="description" content="前言 办公室有一台服务器需要安装Centos操作系统 。一开始准备用移动硬盘来安装，但是在将操作
+系统镜像文件写入硬盘映像时会清除移动硬盘里的数据，所以决定使用其他方式来安装。网上
+搜索了一番，发现可以配置pxe来实现网络安装Centos操作系统，于是决定试一试。 在开始之前， &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://anyegongjue282.github.io/blog/2017/05/19/title/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="毛盾的博客" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">毛盾的博客</a></h1>
+  
+    <h2>step by step.</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="anyegongjue282.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Ubuntu搭建pxe实现网络安装操作系统</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2017-05-19T09:19:23+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>19</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>9:19 am</span></time>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>前言</h2>
 
 <p>办公室有一台服务器需要安装Centos操作系统 。一开始准备用移动硬盘来安装，但是在将操作
 系统镜像文件写入硬盘映像时会清除移动硬盘里的数据，所以决定使用其他方式来安装。网上
@@ -55,7 +123,7 @@ bios把pxe client调入内存中执行，然后由pxe client将放置在远端�
 
 <p>详细工作流程，参考下面这张图（盗图一张，来源于<a href="#ref">参考文档</a>1）</p>
 
-<p><img src="http://anyegongjue282.github.io/images/pxe.png" title="pxe工作原理" alt="pxe工作原理" /></p>
+<p><img src="/images/pxe.png" title="pxe工作原理" alt="pxe工作原理" /></p>
 
 <h2>准备工作</h2>
 
@@ -267,11 +335,11 @@ sudo cp /usr/lib/syslinux/pxelinux.0 /var/lib/tftpboot/
 
 <p>配置界面如下</p>
 
-<p><img src="http://anyegongjue282.github.io/images/kickstart1.png" title="kickstart配置界面1" alt="kickstart配置界面1" /></p>
+<p><img src="/images/kickstart1.png" title="kickstart配置界面1" alt="kickstart配置界面1" /></p>
 
 <p>在安装方法中，我们选择http，http服务器地址填写为之前配置的静态ip地址，目录填写安装树的目录。</p>
 
-<p><img src="http://anyegongjue282.github.io/images/kickstart2.png" title="kickstart配置界面2" alt="kickstart配置界面2" /></p>
+<p><img src="/images/kickstart2.png" title="kickstart配置界面2" alt="kickstart配置界面2" /></p>
 
 <p>其余配置可以借鉴<a href="#ref">参考文档</a>2</p>
 
@@ -368,7 +436,7 @@ append initrd=initrd.img后面增加ks=<a href="http://192.168.3.2/ks.cfg">http:
 
 <p>安装过程中出现的图形界面（网上找了一张Centos6.5的界面，6.9的和这类似）</p>
 
-<p><img src="http://anyegongjue282.github.io/images/startimg.jpg" title="图形界面" alt="图形界面" /></p>
+<p><img src="/images/startimg.jpg" title="图形界面" alt="图形界面" /></p>
 
 <h2>遇到的问题</h2>
 
@@ -400,274 +468,127 @@ git branch -u origin/source source
 [2]<a href="http://linuxme.blog.51cto.com/1850814/871839">http://linuxme.blog.51cto.com/1850814/871839</a><br/>
 [3]<a href="http://www.tuicool.com/articles/meM7Nb">http://www.tuicool.com/articles/meM7Nb</a><br/>
 [4]<a href="http://linux.vbird.org/linux_enterprise/0120installation.php">http://linux.vbird.org/linux_enterprise/0120installation.php</a><br/></p>
-]]></content>
-  </entry>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
   
-  <entry>
-    <title type="html"><![CDATA[Octopress + Github Pages 搭建博客的过程]]></title>
-    <link href="http://anyegongjue282.github.io/blog/2016/10/24/title/"/>
-    <updated>2016-10-24T17:09:17+08:00</updated>
-    <id>http://anyegongjue282.github.io/blog/2016/10/24/title</id>
-    <content type="html"><![CDATA[<h2>前言</h2>
 
-<p>一直以来都想找个地方把工作中遇到的问题，学习总结记录下来，但在以前的公司因为商业涉密
-的原因，很多博客网站都被屏蔽，也就把这事搁置了。这段时间正好有空，网上了解了下有什么
-比较适合程序员写技术博客的地方，看了别人推荐的Octopress + Github Pages来写博客
-的方法，有种相见恨晚的感觉，就像一位博主说的那样，像写代码一样写博客，所有的东西都是
-代码化的，一切尽在掌握中。本文参考网上的文章，记录下自己搭建的过程。</p>
+<span class="byline author vcard">Posted by <span class="fn">毛盾</span></span>
 
-<p>这里先简单介绍下标题中的两个东西。Github想必大家都很熟悉了，它提供一个可以托管我们
-的项目和代码的一个仓储。而Github Pages呢，它是Github提供的用于介绍我们的项目或者
-个人的主页，一个Github账号可以有多个项目主页，但是只能有一个个人主页，我们可以在个
-人主页中存放技术文档，相当于一个技术博客（插点题外话，一开始关于Github Pages用作 个人博客这种行为是否正当网上有过争论，后来看到有了官方的介绍中是允许把Github Pages 作为博客，现在好像大家都接受了，我个人觉得用来写技术文章应该是符合Github Pages
-的本意的，技术无关的东西还是放在其他的博客平台比较好）。Octopress是一个Jekyll的博
-客框架，对Jekyll做了封装，使用更加方便，我们可以用它来很方便的写和上传博文。简单的
-说，Github Pages提供了一个个人主页可以被用作我们的博客，而Octopress则是我们编写
-和上传博文的工具。</p>
+      
 
-<h2>准备工作</h2>
 
-<ul>
-<li>安装git</li>
-<li>安装ruby （1.9.3以上版本）</li>
-<li>Markdown编辑器，支持中文</li>
-<li>注册一个Github账号，创建博客的代码仓储</li>
-</ul>
 
 
-<h3>安装git</h3>
+<time class='entry-date' datetime='2017-05-19T09:19:23+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>19</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>9:19 am</span></time>
+      
 
-<p>我的系统是ubuntu 14.04，64位系统，直接 apt-get install git 安装。</p>
 
-<h3>安装ruby</h3>
-
-<p>这里只介绍下ubuntu下的安装。如果直接用 apt-get install 的方式安装，会发现安装的
-ruby版本并不是最新的版本。我们需要1.9.3以上的ruby版本，因此先要安装一个ruby的版本
-管理工具，常用的两个工具是rbenv和RVM，我用的是rbenv。</p>
-
-<p>安装版本管理工具rbenv及build插件:</p>
-
-<pre><code>cd ~
-git clone git://github.com/sstephenson/rbenv.git .rbenv
-echo 'export PATH="$HOME/.rbenv/bin:$PATH"' &gt;&gt; ~/.bash_profile
-echo 'eval "$(rbenv init -)"' &gt;&gt; ~/.bash_profile
-git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build
-source ~/.bash_profile
-</code></pre>
-
-<p>接下来安装新版本的ruby，我安装的是2.3.1版本，安装完后需要把本地的ruby版本切换到新版本</p>
-
-<pre><code>rbenv install 2.3.1
-rbenv local 2.3.1
-rbenv rehash
-</code></pre>
-
-<h3>Markdown编辑器</h3>
-
-<p>Octopress博文采用Markdown语法来书写，因此我们需要一款好用的Markdown编辑器，我用
-的是Sublime Text 3，安装过程很简单，这里就不再赘述。因为我们书写博客需要用中文，还
-需要安装一个中文输入法，比如搜狗输入法linux版本。另外再安装Sublime的Markdown插件，
-<a href="https://github.com/SublimeText-Markdown/MarkdownEditing">Markdown Editing</a>。</p>
-
-<h3>注册一个Github账号，创建博客的代码仓储</h3>
-
-<p>注册的过程就不用多介绍了。注册好之后，我们还需要创建一个仓储(repo)用来存放博文。比如
-如果你的账号是username，那么你需要创建一个名为username.github.io的repo。注意在
-创建repo的时候，不要为repo创建README文档，让repo保持为空，否则在后面发布博文的时候
-会出现错误。</p>
-
-<h2>搭建过程</h2>
-
-<ul>
-<li>安装Octopress及依赖</li>
-<li>关联Octopress到Github Pages</li>
-<li>基本配置</li>
-<li>开始写博客</li>
-<li>高级配置</li>
-</ul>
-
-
-<h3>安装Octopress及依赖</h3>
-
-<p>克隆Octopress</p>
-
-<pre><code>git clone git://github.com/imathis/octopress.git octopress
-</code></pre>
-
-<p>安装依赖</p>
-
-<pre><code>cd octopress
-gem install bundler
-rbenv rehash
-bundle install
-</code></pre>
-
-<p>安装默认主题</p>
-
-<pre><code>rake install
-</code></pre>
-
-<p>到此，Octopress就安装好了。</p>
-
-<h3>关联Octopress到Github Pages</h3>
-
-<p>前面说到，Octopress是编写和上传博文的工具，Github Pages提供了存储博文的仓储。这
-一步就是把这两者联系起来，也就是当我们用Octopress发布博文的时候，Octopress就知道
-把博文上传到我们指定的仓储。</p>
-
-<pre><code>rake setup_github_pages
-</code></pre>
-
-<p>运行命令后，会要求输入Github Pages的repo地址，把下面的username替换成你的账户名</p>
-
-<pre><code>git@github.com:username/username.github.io.git
-</code></pre>
-
-<p><a href="#ref">参考文档</a>2中解释了这个命令的处理过程，这里简单说明一下。我们从Github上clone了
-Octopress的代码，在没有执行这个命令之前，octopress目录下的分支对应的远端仓库（远端仓
-库名一般默认是origin）就是octopress这个项目的repo。当我们做了修改，再提交，那么我们
-就是提交到octopress这个项目的repo中。而我们的目的是想用ocotpress来写博文，并把我们
-的博文提交到前面我们创建的博客的repo（名为username.github.io的repo）。因此我们需要
-把octopress关联到我们自己的repo。在执行这个命令后，默认的远端仓库origin被指向了我们
-创建的博客repo，同时创建了一个新的名为octopress的远端仓库用来指向octopress项目的
-repo。</p>
-
-<p>在octopress目录下运行命令</p>
-
-<pre><code>git remote -v
-</code></pre>
-
-<p>你将会看到两个远端仓库。</p>
-
-<h3>基本配置</h3>
-
-<p>现在可以对Octopress作一下简单的配置，主要是对_config.yml文件进行修改。</p>
-
-<pre><code>title: 毛盾的博客
-subtitle: step by step.
-author: 毛盾
-</code></pre>
-
-<h3>开始写博客</h3>
-
-<p>主要是下面的几个命令</p>
-
-<pre><code>rake new_post["title"]  //在/source/_posts目录下生成博文框架，为markdown格式
-rake generate           //把markdown文件转换成静态页面，在public目录下
-rake preview            //在http://localhost:4000/ 预览博文
-</code></pre>
-
-<p>如果一切顺利，你就会看到你的博客了，此时博客里只有一篇刚刚创建的博文，内容为空。此时你
-就可以用Markdown编辑器打开/source/_posts目录下的markdown文档，往里面填充内容了。
-关于Markdown语法，可以参考<a href="http://daringfireball.net/projects/markdown/">这里</a>。当你写完一篇博文，想要上传到Github Pages你的个人主页，就用下面的命令来发布。</p>
-
-<pre><code>rake deploy             //把public目录下的内容拷贝到_deploy目录下，上传到博客repo
-</code></pre>
-
-<p>此外，我们还需要提交博客的源文件</p>
-
-<pre><code>git add .
-git commit -m 'comment'
-git push origin source
-</code></pre>
-
-<p>以上就是写博客的基本流程。<a href="#ref">参考文档</a>2中介绍了Octopress的工作原理，这里作下
-简单说明。Octopress建立了两个分支，一个分支是master分支，对应_deploy目录，也就
-是我们最终发布的静态页面。另一个分支是source分支，包括博文的markdown文件，以及生
-成博文的插件，主题和脚本等。执行rake deploy命令，会将master分支进行提交。如果我
-们要提交源文件，则需要使用git命令手动提交source分支。</p>
-
-<h3>高级配置</h3>
-
-<h4>社交分享</h4>
-
-<p>有很多第三方库提供社交分享的功能，我用的是jiathis。</p>
-
-<ol>
-<li><p>在_config.yml中，增加</p>
-
-<pre><code> social_share: true
-</code></pre></li>
-<li><p>修改source/_includes/post/sharing.html，增加下面的内容，记得把所有的
-\去掉</p>
-
-<pre><code>   \{\% if site.social_share \%\}
-       \{\% include post/social_media.html \%\}
-   \{\% endif \%\}
-</code></pre></li>
-<li><p>新建文件source/_includes/post/social_media.html，访问<a href="http://www.jiathis.com/">jiathis</a>，
-获取分享的代码，放入新建的文件中。最好先注册一个jiathis账号后再获取代码，这
-样获取的代码会带有你的uid。</p></li>
-</ol>
-
-
-<h4>添加文章评论</h4>
-
-<p>有很多第三方的评论平台，这里使用多说。</p>
-
-<ol>
-<li><p>打开<a href="http://duoshuo.com/">多说主页</a>，在主页上点击“我要安装”，之后选择一个社交工具的账号
-来登录，然后开始创建站点，站点地址就填写你的博客地址username.github.io，
-然后填写你的多说域名（你填写的部分就是你的多说short_name，后面会用到）。</p></li>
-<li><p>在_config.yml中，增加</p>
-
-<pre><code> duoshuo_comments: true
- duoshuo_short_name: yourname    //你的多说short_name
-</code></pre></li>
-<li><p>在source/<em>layouts/post.html中，</em>增加</p>
-
-<pre><code> ｛% if site.duoshuo_short_name and site.duoshuo_comments == true and page.comments == true %｝
-  &lt;section&gt;
-   &lt;h1&gt;Comments&lt;/h1&gt;
-   &lt;div id="comments" aria-live="polite"&gt;｛% include post/duoshuo.html %｝&lt;/div&gt;
-  &lt;/section&gt;
- ｛% endif %｝
-</code></pre></li>
-<li><p>新建文件source/_includes/post/duoshuo.html，将下面的代码模板复制到新建的
-文件中，记得把yourname替换成你自己的多说short_name。</p>
-
-<pre><code> &lt;!-- Duoshuo COMMENT BEGIN --&gt;
- &lt;div class="ds-thread"&gt;&lt;/div&gt;
- &lt;script type="text/javascript"&gt;
-     var duoshuoQuery = {short_name: "yourname"};
-     (function() {
-         var ds = document.createElement('script');
-         ds.type = 'text/javascript';
-         ds.async = true;
-         ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
-         ds.charset = 'utf-8';
-         (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ds);
-     })();
- &lt;/script&gt;
- &lt;!-- Duoshuo COMMENT END --&gt;
-</code></pre></li>
-</ol>
-
-
-<h4>其他高级配置</h4>
-
-<p>比如配置独立域名，添加about页等，参考文档里面讲的比较详细，这里就不多介绍了。</p>
-
-<h2>遇到的问题</h2>
-
-<ol>
-<li><p>执行命令rake preview，提示Could not find a JavaScript runtime.可能是你
-没有安装js运行环境，如果是ubuntu系统，直接apt-get install nodejs。</p></li>
-<li><p>如果你在为博客创建repo的时候，repo不为空，比如添加了一个README文档，那么在执行
-rake deploy时可能会报错，解决方法参考<a href="http://www.cnblogs.com/xiongqiangcs/p/4234789.html">这里</a>。</p></li>
-<li><p>如果你修改了博文，rake generate，然后rake preview预览，发现博文没有更新，把
-浏览器的缓存清理一下，再试试。</p></li>
-</ol>
-
-
-<h2 id="ref">参考文档</h2>
-
-
-<p>[1]<a href="http://toughcoder.net/blog/2014/10/16/blogging-like-a-hacker-with-github-pages/">http://toughcoder.net/blog/2014/10/16/blogging-like-a-hacker-with-github-pages/</a>
-[2]<a href="http://blog.leichunfeng.com/blog/2014/11/11/use-octopress-plus-github-pages-to-setup-a-personal-blog/">http://blog.leichunfeng.com/blog/2014/11/11/use-octopress-plus-github-pages-to-setup-a-personal-blog/</a><br/>
-[3]<a href="http://blog.devtang.com/2012/02/10/setup-blog-based-on-github/">http://blog.devtang.com/2012/02/10/setup-blog-based-on-github/</a>
-[4]<a href="http://www.jianshu.com/p/1a117ef0e534">http://www.jianshu.com/p/1a117ef0e534</a></p>
-]]></content>
-  </entry>
+    </p>
+    
+      <div class="sharing">
   
-</feed>
+  
+  
+  
+      <!-- JiaThis Button BEGIN -->
+<div class="jiathis_style">
+	<span class="jiathis_txt">分享到：</span>
+	<a class="jiathis_button_tools_1"></a>
+	<a class="jiathis_button_tools_2"></a>
+	<a class="jiathis_button_tools_3"></a>
+	<a class="jiathis_button_tools_4"></a>
+	<a href="http://www.jiathis.com/share?uid=2118028" class="jiathis jiathis_txt jiathis_separator jtico jtico_jiathis" target="_blank">更多</a>
+	<a class="jiathis_counter_style"></a>
+</div>
+<script type="text/javascript">
+var jiathis_config = {data_track_clickback:'true'};
+</script>
+<script type="text/javascript" src="http://v3.jiathis.com/code/jia.js?uid=2118028" charset="utf-8"></script>
+<!-- JiaThis Button END -->
+
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2016/10/24/title/" title="Previous Post: Octopress + Github Pages 搭建博客的过程">&laquo; Octopress + Github Pages 搭建博客的过程</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2017/05/19/title/">Ubuntu搭建pxe实现网络安装操作系统</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/10/24/title/">Octopress + Github Pages 搭建博客的过程</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+  <section>
+    <h1>Comments</h1>
+    <div id="comments" aria-live="polite"><!-- Duoshuo COMMENT BEGIN -->
+<div class="ds-thread"></div>
+<script type="text/javascript">
+    var duoshuoQuery = {short_name: "anyegongjue282"};
+    (function() {
+        var ds = document.createElement('script');
+        ds.type = 'text/javascript';
+        ds.async = true;
+        ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+        ds.charset = 'utf-8';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+</script>
+<!-- Duoshuo COMMENT END -->
+</div>
+  </section>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2017 - 毛盾 -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
