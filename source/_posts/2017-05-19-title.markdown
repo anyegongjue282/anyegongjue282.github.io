@@ -1,0 +1,351 @@
+---
+layout: post
+title: "ubuntu搭建pxe实现网络安装操作系统"
+date: 2017-05-19 09:19:23 +0800
+comments: true
+categories: 
+---
+
+##前言
+
+办公室有一台服务器需要安装Centos操作系统 。一开始准备用移动硬盘来安装，但是在将操作
+系统镜像文件写入硬盘映像时会清除移动硬盘里的数据，所以决定使用其他方式来安装。网上
+搜索了一番，发现可以配置pxe来实现网络安装Centos操作系统，于是决定试一试。
+
+在开始之前，先简单介绍一下pxe的工作原理。pxe(Pre-boot Execution Enviroment，预启动
+执行环境)是由Intel公司开发的技术，工作于Client/Server的网络模式，支持工作站通过网络从
+远端服务器下载映像，并由此支持通过网络启动操作系统。在启动过程中，终端要求服务器分
+配ip地址，再用tftp(trivial file transfer protocol)或mtftp(multicast trivial file transfer protocol)
+协议下载pxe引导文件与所要安装操作系统的内核文件，来引导操作系统的安装。
+
+严格来说，pxe并不是一种安装方式，而是一种引导方式。进行pxe安装的必要条件是在安装的
+计算机中必须包含一个pxe支持的网卡，即网卡中必须要有pxe client。pxe协议可以使计算机通
+过网络启动。此协议分为client端和server端，而pxe client则在网卡的rom中。当计算机引导时，
+bios把pxe client调入内存中执行，然后由pxe client将放置在远端的文件通过网络下载到本地运
+行。运行pxe协议需要设置dhcp服务器和tftp服务器。dhcp服务器会给pxe client（将要安装系统
+的主机）分配一个ip地址，由于是给pxe client分配ip地址，所以在配置dhcp服务器时需要增加相
+应的pxe设置。此外，在pxe client的rom中，已经存在了tftp client，那么它就可以通过tftp协议
+到tftp server上下载所需的文件了。
+
+pxe的工作过程：
+
+1. pxe client从自己的pxe网卡启动，向本网络中的dhcp服务器获取ip
+
+2. dhcp服务器返回分配给客户机的ip以及pxe文件的放置位置（该文件一般是放在一台tftp服务器
+   上）
+
+3. pxe client 向本网络中的tftp服务器获取pxelinux.0文件
+
+4. pxe client执行pxelinux.0（类似boot loader，是一个开机管理程序）
+
+5. 根据pxelinux.0的执行结果，通过tftp服务器加载内核和文件系统
+
+6. 进入安装画面，开始进行系统安装，所需要的文件可以通过http、ftp、nfs几种方式之一获取
+   （本文通过http来获取）
+
+详细工作流程，参考下面这张图（盗图一张，来源于[参考文档](#ref)1）
+
+![pxe工作原理][pxe]
+
+##准备工作
+
+了解了pxe的工作原理，我们大概知道需要做哪些准备工作了。这里的准备工作主要是在pxe服务
+器端（我用的是一台笔记本电脑，系统是ubuntu14.04）安装相应的服务，并准备好需要的文件。
+
+* 关闭iptables与Selinux
+* 安装dhcp服务并进行配置
+* 安装tftp服务并进行配置
+* 安装httpd服务并进行配置
+* 准备安装树
+* 准备kick start文件
+
+###关闭iptables与Selinux
+
+    sudo ufw disable
+
+我的环境中并没有安装Selinux，所以关闭Selinux这步略过
+
+###安装dhcp服务并进行配置
+
+    sudo apt-get install isc-dhcp-server
+
+我们还需要将服务器的网卡设置成静态ip
+
+    sudo vi /etc/network/interfaces
+
+添加eth0的配置
+
+    auto eth0
+    iface eth0 inet static
+    address 192.168.3.2
+    netmask 255.255.255.0
+    broadcast 192.168.3.255
+    gateway 192.168.3.1
+
+之后重启网口（重启除还回口之外的网口）
+
+    sudo ifdown --exclude=lo -a && sudo ifup --exclude=lo -a
+
+修改dhcp配置文件
+
+    sudo vi /etc/dhcp/dhcpd.conf
+
+在末尾添加
+
+    subnet 192.168.3.0 netmask 255.255.255.0 {
+        range 192.168.3.10 192.168.3.254;        #地址池范围
+        option routers 192.168.3.2;              #dhcp网关地址，这里填写为本机eth0地址
+        next-server 192.168.3.2;                 #tftp服务器地址
+        filename "pxelinux.0";                   #指定的pxe文件
+    }
+
+重启dhcp服务
+
+    sudo /etc/init.d/isc-dhcp-server restart
+
+看看67端口是否已启用
+
+    ss -unl
+
+###安装tftp服务并进行配置
+
+    sudo apt-get install tftpd-hpa
+    sudo apt-get install tftp-hpa
+
+修改配置文件
+
+    sudo vi /etc/default/tftpd-hpa
+
+配置如下
+
+    TFTP_USERNAME="tftp"
+    TFTP_DIRECTORY="/var/lib/tftpboot"
+    TFTP_ADDRESS=":69"
+    TFTP_OPTIONS="--secure"
+    RUN_DAEMON="yes"
+    OPTION="-l -s /var/lib/tftpboot"
+
+重启tftp服务
+
+    sudo /etc/init.d/tftpd-hpa start文件
+
+看看69端口是否已启用
+
+    ss -unl
+
+此外，还需要在tftp目录/var/lib/tftpboot下准备好需要的文件。首先挂载操作系统的镜像文件。
+
+    sudo mount -o loop CentOS-6.9-x86_64-bin-DVD1.iso /media/cdrom
+
+进行拷贝
+
+    sudo cp /media/cdrom/images/pxeboot/vmlinuz /var/lib/tftpboot/
+    sudo cp /media/cdrom/images/pxeboot/initrd.img /var/lib/tftpboot/
+    sudo cp /media/cdrom/isolinux/boot.msg /var/lib/tftpboot/
+    sudo cp /media/cdrom/isolinux/splash.jpg /var/lib/tftpboot/
+    sudo cp /media/cdrom/isolinux/vesamenu.c32 /var/lib/tftpboot/
+
+这里简单说明一下这几个文件
+
+* vmlinuz：内核文件
+* initrd.img：内核模块参数
+* vesamenu.c32：显示图形界面的程序
+* splash.jpg：图形界面背景图片
+* boot.msg：提供额外的信息，让使用者了解选项意义
+
+图形界面显示的菜单在isolinux.cfg文件中配置。我们在新建一个pxelinux.cfg目录，将其拷贝到
+该目录下，重命名为default。
+
+    sudo mkdir pxelinux.cfg
+    sudo cp /media/cdrom/isolinux/isolinux.cfg /var/lib/tftpboot/pxelinux.cfg/default
+
+可以看到，该文件的每一个label都对应图形界面上的一个启动选项。
+
+    label linux
+      menu label ^Install or upgrade an existing system
+      menu default
+      kernel vmlinuz
+      append initrd=initrd.img
+    label vesa
+      menu label Install system with ^basic video driver
+      kernel vmlinuz
+      append initrd=initrd.img nomodeset
+    label rescue
+      menu label ^Rescue installed system
+      kernel vmlinuz
+      append initrd=initrd.img rescue
+    label local
+      menu label Boot from ^local drive
+      localboot 0xffff
+    label memtest86
+      menu label ^Memory test
+      kernel memtest
+      append -
+
+等一等，是不是还少了个最重要的文件。没错，我们还需要pxelinux.0。这个文件需要通过安装syslinux
+才能获取到，然后将其拷贝到tftp目录下。
+
+    apt-get install syslinux
+    sudo cp /usr/lib/syslinux/pxelinux.0 /var/lib/tftpboot/
+
+###安装httpd服务并进行配置
+
+    sudo apt-get install apache2
+
+启动httpd服务
+
+    sudo service apache2 start
+
+查看httpd服务状态
+
+    sudo service apache2 status
+
+###准备安装树
+安装树是一个目录，包括了完整的系统安装文件和相关程序。我们之前下载好的Centos镜像文件，进行
+挂载后（目录为/media/cdrom）就可以作为安装树。同时，我们需要httpd服务来向外提供安装树，因
+此需要把安装树放在httpd服务路径/var/www/html目录下。
+
+    sudo mount --bind /media/cdrom/ /var/www/html/centos6.9/
+
+###准备kick start文件
+相信大家都有过不少安装操作系统的经验了。在安装系统的时候，安装程序会与我们进行交互，要求我们
+完成很多设定，比如区域，语言，时间，用户名密码以及磁盘分区等。那么有没有可能安装程序自动完成
+这些设定而不需要与我们进行交互呢？答案是肯定的，通过kick start可以实现。我们可以把我们想要的
+设定预先保存在一个kick start文件中，当安装程序需要完成系统的各种设定时，它不再与我们进行交互，
+而是直接读取kick start文件中的配置。ubuntu系统下，通过system-config-kickstart来生成kick start文件。
+
+安装system-config-kickstart
+
+    sudo apt-get install system-config-kickstart
+
+使用system-config-kickstart进行配置
+
+    system-config-kickstart &
+
+配置界面如下
+
+![kickstart配置界面1][ks1]
+
+在安装方法中，我们选择http，http服务器地址填写为之前配置的静态ip地址，目录填写安装树的目录。
+
+![kickstart配置界面2][ks2]
+
+其余配置可以借鉴[参考文档](#ref)2
+
+配置好以后，我们把这些配置保存成文件ks.cfg，放在/var/www/html/目录下。生成的ks.cfg文件内容如下
+
+    #Generated by Kickstart Configurator
+    #platform=x86
+    
+    #System language
+    lang en_US
+    #Language modules to install
+    lang en_US
+    #System keyboard
+    keyboard us
+    #System mouse
+    #mouse
+    #System timezone
+    timezone Asia/Shanghai
+    #Root password
+    rootpw --iscrypted $1$Cl5Hj3DM$YK2YmnSGhWlS3Ikoll2jf.
+    #Initial user
+    #user xxk --fullname "xxk" --iscrypted --password $1$hidfUjGt$AGwC0WU3InS1HG5/kRfD41
+    #Reboot after installation
+    reboot
+    #Use text mode install
+    text
+    #Install OS instead of upgrade
+    install
+    #Use Web installation
+    url --url http://192.168.3.2/centos6.9
+    #System bootloader configuration
+    bootloader --location=mbr 
+    #Clear the Master Boot Record
+    zerombr yes
+    #Partition clearing information
+    clearpart --all --initlabel 
+    #Disk partitioning information
+    part /home --fstype ext4 --size 50000 
+    part / --fstype ext4 --size 400000 
+    part /boot --fstype ext4 --size 1000 
+    part swap --size 2000 
+    #System authorization infomation
+    auth  --useshadow  --enablemd5 
+    #Network information
+    network --bootproto=dhcp --device=eth0
+    #Firewall configuration
+    firewall --disabled 
+    #Do not configure the X Window System
+    skipx
+
+需要注意的是，因为我是在ubuntu系统下生成kick start文件，而我要安装的是Centos系统，不同系统的kick start文件会有少许区别。比如我生成的ks.cfg文件中，关于鼠标的设定以及普通用户（非超级用户）的设定在
+Centos下就不支持，需要把它们注释掉。
+
+此外，我们还需要告诉安装程序ks.cfg文件的位置。修改/var/lib/tftpboot/pxelinux.cfg/default，第一个label下，
+append initrd=initrd.img后面增加ks=http://192.168.3.2/ks.cfg
+
+    label linux
+      menu label ^Install or upgrade an existing system
+      menu default
+      kernel vmlinuz
+      append initrd=initrd.img ks=http://192.168.3.2/ks.cfg
+
+##安装过程
+
+* 硬件环境
+* 修改bios
+* 开始安装
+
+###硬件环境
+将pxe服务器端（一台笔记本电脑）和pxe客户端（待安装Centos的一台服务器）连接在同一个子网内。最简单的
+办法是使用hub，但是由于办公室里面没有hub，只有无线路由器，于是将笔记本和服务器都用网线连接到路由器，
+这样也可以保证它们在一个子网内。
+
+现在的无线路由器都自带了dhcp的功能，按道理应该需要将路由器的dhcp关闭。但是我没有关闭路由器的dhcp服务
+（因为不知道路由器admin账号的密码），也并没有影响。
+
+###修改bios
+修改待安装Centos系统的服务器的bios，将启动方式改为从网络启动。（并不是所有bios都支持这种启动方式，如果
+不支持，那么就不能通过网络进行安装）。
+
+###开始安装
+修改bios后，重启待安装系统的服务器，出现安装界面，选择第一项，后面的整个安装过程就不需要我们干预了，
+我们就可以去做别的事情了。等整个安装过程结束，系统会自动重启，我们再进入bios，把启动方式修改为从硬盘
+启动，整个安装过程就结束了。如果我们有多台电脑需要安装同样的操作系统，那么我们配置好pxe服务器端以后，
+只要保证待安装系统的电脑处于同一子网内，这些电脑就会自动进行下载，安装，大大减轻了工作量。
+
+安装过程中出现的图形界面（网上找了一张Centos6.5的界面，6.9的和这类似）
+
+![图形界面][startimage]
+
+##遇到的问题
+
+1. 其实和本文所讲的内容没有关系。我之前在办公室台式机上搭建了一个octopress环境，在那上面写博客，现在
+   想在笔记本上也搭一个octopress。安装好octopress和相关组件后，运行rake setup_github_pages将远端仓库origin
+   关联到我github上的repo。此时运行git branch -a，并不能看到我github上repo里面的两个分支。
+
+   运行命令
+
+       git fetch origin
+
+   可以将远端仓库origin的分支同步到本地，再用命令git branch -a，就可以看到origin仓库的远端分支了。再将远端
+   分支与本地分支关联起来。
+
+       git branch -u origin/master master
+       git branch -u origin/source source
+
+   这样就可以进行git pull，git push等操作了。
+
+<h2 id="ref">参考文档</h2>
+
+[1]http://www.linuxidc.com/Linux/2014-11/109074.htm<br/>
+[2]http://linuxme.blog.51cto.com/1850814/871839<br/>
+[3]http://www.tuicool.com/articles/meM7Nb<br/>
+[4]http://linux.vbird.org/linux_enterprise/0120installation.php<br/>
+
+
+[pxe]: /images/pxe.png  "pxe工作原理"
+[ks1]: /images/kickstart1.png  "kickstart配置界面1"
+[ks2]: /images/kickstart2.png  "kickstart配置界面2"
+[startimage]: /images/startimg.jpg  "图形界面"
