@@ -4,7 +4,7 @@
   <title><![CDATA[毛盾的博客]]></title>
   <link href="http://anyegongjue282.github.io/atom.xml" rel="self"/>
   <link href="http://anyegongjue282.github.io/"/>
-  <updated>2017-05-20T18:05:00+08:00</updated>
+  <updated>2017-05-22T08:36:26+08:00</updated>
   <id>http://anyegongjue282.github.io/</id>
   <author>
     <name><![CDATA[毛盾]]></name>
@@ -152,7 +152,7 @@ OPTION="-l -s /var/lib/tftpboot"
 
 <p>重启tftp服务</p>
 
-<pre><code>sudo /etc/init.d/tftpd-hpa start文件
+<pre><code>sudo /etc/init.d/tftpd-hpa start
 </code></pre>
 
 <p>看看69端口是否已启用</p>
@@ -185,7 +185,7 @@ sudo cp /media/cdrom/isolinux/vesamenu.c32 /var/lib/tftpboot/
 </ul>
 
 
-<p>图形界面显示的菜单在isolinux.cfg文件中配置。我们在新建一个pxelinux.cfg目录，将其拷贝到
+<p>图形界面显示的菜单在isolinux.cfg文件中配置。我们再新建一个pxelinux.cfg目录，将其拷贝到
 该目录下，重命名为default。</p>
 
 <pre><code>sudo mkdir pxelinux.cfg
