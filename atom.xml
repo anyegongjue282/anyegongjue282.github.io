@@ -4,7 +4,7 @@
   <title><![CDATA[毛盾的博客]]></title>
   <link href="http://anyegongjue282.github.io/atom.xml" rel="self"/>
   <link href="http://anyegongjue282.github.io/"/>
-  <updated>2017-05-22T08:36:26+08:00</updated>
+  <updated>2017-07-29T11:30:28+08:00</updated>
   <id>http://anyegongjue282.github.io/</id>
   <author>
     <name><![CDATA[毛盾]]></name>
@@ -12,6 +12,238 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[理解闭包：把大象放进冰箱]]></title>
+    <link href="http://anyegongjue282.github.io/blog/2017/07/27/title/"/>
+    <updated>2017-07-27T17:22:52+08:00</updated>
+    <id>http://anyegongjue282.github.io/blog/2017/07/27/title</id>
+    <content type="html"><![CDATA[<h2>前言</h2>
+
+<p>在很多高级语言中，都有闭包(closure)这个概念。刚开始接触的时候，在网上看了一些资料，
+总觉得讲的很抽象，很难理解，一直也没有搞清楚。这段时间在学习一个php框架，里面也有
+用到闭包。通过里面的例子，重新整理了一下思路，这里把我的心得体会记录下来。</p>
+
+<p>记得很多年前有一个小品，里面有个问题是：把大象放进冰箱需要几个步骤？答案是只需要3步：</p>
+
+<ol>
+<li><p>把冰箱门打开</p></li>
+<li><p>把大象放进冰箱</p></li>
+<li><p>把冰箱门关上</p></li>
+</ol>
+
+
+<p>其实这个故事很像是我们在写代码处理具体的业务场景时的思考过程。面对一个复杂的业务场景
+（把大象放进冰箱），我们通常都是将其进行层层分解，然后再分层实现。比如针对这个问题，
+我们可以定义3个函数，分别对应上面的3个步骤，然后再按顺序调用，就可以解决了。嗯，典型
+的面向过程的思维。到这里，好像跟闭包都没有什么关系。没关系，我们先把上面这个例子放一
+边，来看另外一个例子。</p>
+
+<h2>例子：脱衣服</h2>
+
+<p>现在的场景是，一个人身上穿了3件衣服，从里到外分别是：内衣，带纽扣的衣服，带拉链的衣服，
+他现在要去洗澡，要把身上的衣服都脱掉。很自然的，我们也会想到分步来解决问题。</p>
+
+<ol>
+<li><p>脱掉最外层的衣服。衣服上面有附件拉链，需要先解开拉链，再脱掉衣服。</p></li>
+<li><p>脱掉中间层的衣服。衣服上面有附件纽扣，需要先解开纽扣，再脱掉衣服。</p></li>
+<li><p>脱掉里层的内衣。内衣上面没有附件，直接脱掉。</p></li>
+</ol>
+
+
+<p>处理的过程跟上面的把大象放进冰箱的例子完全类似。但是在这个例子里面，3个步骤的每一步
+都很类似，都是脱掉一件衣服，区别是每件衣服的附件不同，需要有不同的动作来处理。我们
+再设想一下，如果这3件衣服都是一样的衣服，会是一个什么场景呢？这不就是一个典型的递归
+问题嘛。我们需要做的就是一件一件的脱衣服，如果里面还有衣服，就继续脱下一件，直到里面
+没有衣服为止。使用递归的思想，我们可以更加抽象的来思考解决问题。但是，现在的问题是这
+3件衣服不一样，脱掉每件衣服的处理是有差异的。我们是不是可以用类似递归的办法来处理呢？
+答案是可以的，用闭包。先把代码贴上，后面再来解释。代码是用php写的（用什么语言并不是
+关键，主要目的是帮助我们理解概念）。</p>
+
+<pre><code>&lt;?php
+
+function constructClosure($closure, $accessories)
+{
+    return function()  use ($closure, $accessories)
+    {
+        echo "解开附件" . $accessories . "，";
+        echo "脱掉衣服\n";
+        $closure();
+    };
+}
+
+$accessories = array(
+                              "拉链",
+                              "纽扣"
+                             );
+
+$takeOffUnderWear = function(){
+    echo "脱掉内衣 \n";
+};
+
+$accessories = array_reverse($accessories);
+$takeOffClothes = array_reduce($accessories, constructClosure,  $takeOffUnderWear);
+$takeOffClothes();
+
+?&gt;
+</code></pre>
+
+<p>到这里终于跟闭包扯上关系了。那么闭包到底是什么？最简单的解释，闭包是匿名函数。例如在
+上面的代码中，constructClosure函数中，return后面的部分，就是一个闭包。</p>
+
+<p><img src="http://anyegongjue282.github.io/images/closure_concept.png" title="一个典型的闭包" alt="一个典型的闭包" /></p>
+
+<p>我们先来看看闭包长啥样。跟普通的函数挺像的是吧。跟普通函数的区别主要是没有函数名
+（use ($closure, $accessories)这部分先不管），所以叫做匿名函数。但是仅仅只是知道闭包是
+匿名函数对于我们理解闭包是远远不够的。我们再来看看，上面的代码中，闭包作为一个整体，
+作为函数constructClosure的返回值，被return了。在我们以往的认识中，通常return的都是一
+个变量，而这里返回的却是一个闭包。这里可以看出闭包的第一个特点，那就是闭包可以像一个
+变量一样，可以作为值来传递，包括：可以作为函数返回值，可以作为函数入参（constructClosure
+的入参$closure也是闭包），也可以把闭包赋值给一个变量。总之就是，我们可以把闭包当作一
+个变量一样来使用。可能有人会问，既然把闭包看作是变量，那么这个变量是什么类型呢？可以把
+闭包看作是一种特殊类型的变量。</p>
+
+<p>我们来看一下constructClosure函数，这个函数是在干嘛呢？这个函数有2个入参，其中一个是
+闭包，函数的返回值也是一个闭包。也就是说，这个函数是通过一个闭包（入参），形成了一个
+新的闭包（返回值）。这不是正好符合迭代的特点嘛。而上面的代码也的确是在做迭代。</p>
+
+<pre><code>$takeOffClothes = array_reduce($accessories, constructClosure,  $takeOffUnderWear);
+</code></pre>
+
+<p>这里做了2次迭代。（关于array_reduce函数，可以参考php的手册）</p>
+
+<h3>第一次迭代</h3>
+
+<p>constructClosure的入参，$closure = $takeOffUnderWear，$accessories = &ldquo;纽扣"（注意数组
+$accessories经过了反转，所以数组的第一个值是"纽扣"）。传入的初始的闭包$takeOffUnderWear，
+做了什么呢？我们看它的函数体，很简单，就是把内衣脱掉。</p>
+
+<pre><code>$takeOffUnderWear = function(){
+    echo "脱掉内衣 \n";
+};
+</code></pre>
+
+<p>经过第一次迭代，形成了一个新的闭包，我们可以把这个新的闭包用变量$closure1来表示（注意
+上面提到的闭包的第一个特点，可以当作变量来使用）。那么这个新的闭包做了什么呢？我们看它
+的函数体部分</p>
+
+<pre><code>function()  use ($closure, $accessories)
+{
+    echo "解开附件" . $accessories . "，";
+    echo "脱掉衣服\n";
+    $closure();
+};
+</code></pre>
+
+<p>函数体里面用到了函数体外部的两个变量$closure, $accessories。（注意这两个变量并非是闭包的
+入参，在这里闭包的入参为空）。这里可以看出闭包的第二个特点，也就是闭包可以使用作用域外
+的变量。（php里面使用关键字use来继承外部的变量，其他语言的语法可能有点不同）。这个新
+形成的闭包$closure1执行的动作包括：解开纽扣（继承自外部变量$accessories的值是纽扣），
+脱掉衣服，然后再调用初始的闭包$takeOffUnderWear（因为闭包本质是匿名函数，所以我们可以
+调用它）。可以看到，因为可以继承外部变量，所以闭包的行为（函数体部分）可以根据外部变量
+的不同而产生差异。</p>
+
+<h3>第二次迭代</h3>
+
+<p>constructClosure的入参，$closure = $closure1（第一次迭代的结果），$accessories = &ldquo;拉链"。
+又形成了一个新的闭包，这个闭包被赋值给了变量$takeOffClothes。这个闭包执行的动作包括：
+解开 拉链（继承自外部变量$accessories的值是拉链），脱掉衣服，再调用上一次迭代形成的闭包
+$closure1。可以看到，这次形成的闭包其行为又有了不同。</p>
+
+<p>我们可以这么来理解这两次迭代。一开始，我们需要处理的场景很简单，只穿了内衣，只需要脱掉
+这一件衣服。我们用初始的闭包$takeOffUnderWear就可以处理。然后，问题变复杂了一点，外面
+又套了一件带纽扣的衣服，我们需要脱掉2件衣服。这时，我们可以在初始闭包的基础上，再套上一
+层，形成一个新的闭包。这对应了上面的第一次迭代。再后来，问题又复杂了一点，外面又套上了
+一件带拉链的衣服，我们需要脱掉3件衣服。这时，我们又可以在上次的闭包基础上，再套上一层，
+形成一个更大的闭包。这对应了上面的第二次迭代。</p>
+
+<p><img src="http://anyegongjue282.github.io/images/closure_iteration.png" title="闭包的迭代" alt="闭包的迭代" /></p>
+
+<p>可以看到，一个比较复杂的处理过程，我们通过闭包的迭代进行了抽象和简化，而闭包的两个特点
+可以支持我们进行这样的抽象和简化。最终形成的闭包$takeOffClothes就好像是从里到外穿上3件
+不同的衣服，描述好了我们需要解决的场景。</p>
+
+<pre><code>$takeOffClothes = array_reduce($accessories, constructClosure,  $takeOffUnderWear);
+</code></pre>
+
+<p>上面的语句，我们只是得到了一个闭包，相当于得到了一个解决方案，但是我们只是得到了方案，
+还没有解决问题。再想想闭包的本质是什么？对，匿名函数，函数就需要调用执行。最后我们需
+要调用一下最终形成的闭包$takeOffClothes，这样就大功告成了。</p>
+
+<p>运行结果如下。</p>
+
+<p><img src="http://anyegongjue282.github.io/images/example1_result.png" title="运行结果" alt="运行结果" /></p>
+
+<p>通过这个例子，我们再来重新认识一下闭包这个词。闭包是匿名函数，包的是什么呢？包的是函数体
+部分，也就是代码部分。除此之外呢，还有继承自作用域外的变量。当形成闭包的时候（“穿衣服”），
+闭包函数体部分的这些作用域外的变量，继承自外部。在这之后，这些作用域外的变量就再也不可见
+了。当我们执行闭包的时候（“脱衣服”），这些作用域外的变量既不是闭包的输入，也不是输出，
+就好像是函数的内部代码一样，外部是看不见的。这么看来，叫“闭包”还是比较贴切的。</p>
+
+<h2>例子：把大象放进冰箱</h2>
+
+<p>现在再回过头来看一下开头提到的把大象放进冰箱的问题。把大象放进冰箱的3个步骤看起来没有太多
+的相似之处，也可以用闭包来解决吗？答案是可以。</p>
+
+<pre><code>&lt;?php
+
+interface MIddleware
+{
+    public static function handle(Closure $next);
+}
+
+class Fridge implements MIddleware
+{
+    public static function handle(Closure $next)
+    {
+        echo "把冰箱门打开\n";
+        $next();
+        echo "把冰箱门关上\n";
+    }
+}
+
+function constructClosure($closure, $pipe)
+{
+    return function()  use ($closure, $pipe)
+    {
+        $pipe::handle($closure);
+    };
+}
+
+$pipes = array("Fridge");
+$putElephantIntoFridge = function() {
+    echo "把大象放进冰箱\n";
+};
+
+$procedures = array_reduce($pipes, constructClosure,  $putElephantIntoFridge);
+$procedures();
+
+?&gt;
+</code></pre>
+
+<p>说明一下，上面的代码中把接口MIddleware和类Fridge的函数定义为static是为了不用实例化类。
+代码是模仿参考文档1中的代码。这里其实用到了设计模式中的装饰着模式，是用闭包来实现的。
+运行结果如下。</p>
+
+<p><img src="http://anyegongjue282.github.io/images/example2_result.png" title="运行结果" alt="运行结果" /></p>
+
+<p>看到这里，可能不免会问，这是不是有点简单问题复杂化。把大象放进冰箱，写3个函数就好了，
+需要整闭包这些复杂的东西吗？其实举这个例子，只是方便解释闭包的概念，理解一下闭包的使用。
+跟传统的解决方案相比，闭包可以把解决问题的各个环节，动态组合起来，提供了一种动态的灵活
+性，这是闭包的优势。但是，闭包也不是没有缺点（因为我也是刚接触闭包，对这一点没有太多
+认识，可以参考其他的资料）。针对具体的场景，闭包是否是好的选择，还需要我们多积累经验，
+多思考分析。</p>
+
+<p>总之，闭包这个概念，一开始我是被网上的各种资料给绕晕了。感觉还是结合具体的例子，会比较
+好理解一点。<a href="https://www.zhihu.com/question/51402215">知乎</a>上面有一个问题是关于设计闭包（Closure）的初衷，我觉得对于认识闭包也比较
+有帮助。</p>
+
+<h2 id="ref">参考文档</h2>
+
+
+<p>[1]Laravel框架关键技术解析 P104-P110<br/></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Ubuntu搭建pxe实现网络安装操作系统]]></title>
